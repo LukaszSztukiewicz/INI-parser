@@ -16,6 +16,7 @@ Mode 2 - section.key - only one,
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 struct Key
 {
     char *key;
@@ -31,7 +32,7 @@ struct Section
 
 struct Key *firstKey()
 {
-    struct Key *firstKey = malloc(sizeof(struct Key));
+    /*struct Key *firstKey = malloc(sizeof(struct Key));
     struct Key *nextKey = firstKey();
     while (fgets(buf, sizeof buf, file) != NULL)
     {
@@ -43,7 +44,7 @@ struct Key *firstKey()
     firstKey->key = key;
     firstKey->value = value;
     firstKey->nextkey = NULL;
-    return firstKey;
+    return firstKey;*/
 }
 // define parse function returning pointer to struct section
 struct section *parse_file(FILE *file)
