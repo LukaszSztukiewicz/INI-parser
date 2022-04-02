@@ -57,24 +57,36 @@ struct Section *parse_file(FILE *file) {
         }
         i_section->nextsection = new_section;
       }
-    } else {
-      char *key   = strtok(buffer, "=");
+    }
+    else if(buffer[0] == '\n'){
+      continue;
+    }
+     else {
+      char *key_value = buffer;
+      char *key   = strtok(key_value, "=");
       char *value = strtok(NULL, "\n");
-      value++;
       struct Key *new_key = malloc(sizeof(struct Key));
-      new_key->key        = key;
-      new_key->value      = value;
+      new_key->key        = NULL;
+      new_key->value      = NULL;
       new_key->nextkey    = NULL;
-      if (first_section->keys == NULL) {
-        first_section->keys = new_key;
+      new_key->key        = malloc(sizeof(char) * strlen(key));
+      strcpy(new_key->key, key);
+      new_key->value      = malloc(sizeof(char) * strlen(value));
+      strcpy(new_key->value, value + 1);
+      struct Section *i_section = first_section;
+      while (i_section->nextsection != NULL) {
+        i_section = i_section->nextsection;
+      }
+      if (i_section->keys == NULL) {
+        i_section->keys = new_key;
       } else {
-        struct Key *i_key = first_section->keys;
+        struct Key *i_key = i_section->keys;
         while (i_key->nextkey != NULL) {
           i_key = i_key->nextkey;
         }
         i_key->nextkey = new_key;
+        }
       }
-    }
   }
   return first_section;
 }
