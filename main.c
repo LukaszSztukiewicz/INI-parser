@@ -79,7 +79,7 @@ struct Section *parse_file(FILE *file)
     return first_section;
 }
 
-char *argv_validation(FILE *file)
+char *argv_validation(char *argv)
 {
 }
 
@@ -100,7 +100,7 @@ char *read_value_from_section(struct Section *first_section, char *section, char
             return "Key not found";
         i_key = i_key->nextkey;
     }
-    return i_key;
+    return i_key->value;
 }
 
 int main(int argc, char *argv[])
@@ -115,19 +115,19 @@ int main(int argc, char *argv[])
     struct Section *first_section = parse_file(file);
 
     // Mode 1
-    if (argv[2] == 'expression')
+    if (argv[2] == "expression")
     {
         char *expression = argv[3];
         char *validation_result = argv_validation(expression);
-        if (validation_result == 'int')
+        if (validation_result == "int")
         {
             // to implement
         }
-        else if (validation_result == 'string')
+        else if (validation_result == "string")
         {
             // to implement
         }
-        else if (validation_result == 'invalid')
+        else if (validation_result == "invalid")
         {
             printf("Invalid arguments for expression: %s\n", expression);
             return 1;
