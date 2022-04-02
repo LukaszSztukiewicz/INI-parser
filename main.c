@@ -57,21 +57,20 @@ struct Section *parse_file(FILE *file) {
         }
         i_section->nextsection = new_section;
       }
-    }
-    else if(buffer[0] == '\n'){
+    } else if (buffer[0] == '\n') {
       continue;
-    }
-     else {
-      char *key_value = buffer;
-      char *key   = strtok(key_value, "=");
-      char *value = strtok(NULL, "\n");
-      struct Key *new_key = malloc(sizeof(struct Key));
-      new_key->key        = NULL;
-      new_key->value      = NULL;
-      new_key->nextkey    = NULL;
-      new_key->key        = malloc(sizeof(char) * strlen(key));
+    } else {
+      char *key_value      = buffer;
+      char *key            = strtok(key_value, "=");
+      char *value          = strtok(NULL, "\n");
+      struct Key *new_key  = malloc(sizeof(struct Key));
+      new_key->key         = NULL;
+      new_key->value       = NULL;
+      new_key->nextkey     = NULL;
+      new_key->key         = malloc(sizeof(char) * strlen(key));
+      key[strlen(key) - 1] = '\0';
       strcpy(new_key->key, key);
-      new_key->value      = malloc(sizeof(char) * strlen(value));
+      new_key->value = malloc(sizeof(char) * strlen(value));
       strcpy(new_key->value, value + 1);
       struct Section *i_section = first_section;
       while (i_section->nextsection != NULL) {
@@ -85,8 +84,8 @@ struct Section *parse_file(FILE *file) {
           i_key = i_key->nextkey;
         }
         i_key->nextkey = new_key;
-        }
       }
+    }
   }
   return first_section;
 }
@@ -95,15 +94,18 @@ char *argv_validation(char *argv) {}
 
 char *read_value_from_section(struct Section *first_section, char *section,
                               char *key) {
-  struct Section *i_section = first_section;
-  while (i_section->name != section) {
+
+  struct Section *i_section = malloc(sizeof(struct Section));
+  i_section                 = first_section;
+  while (strcmp(i_section->name, section) != 0) {
     if (i_section->nextsection == NULL)
       return "Section not found";
     i_section = i_section->nextsection;
   }
 
-  struct Key *i_key = i_section->keys;
-  while (i_key->value != key) {
+  struct Key *i_key = malloc(sizeof(struct Key));
+  i_key             = i_section->keys;
+  while (strcmp(i_key->key, key) != 0) {
     if (i_key->nextkey == NULL)
       return "Key not found";
     i_key = i_key->nextkey;
@@ -119,7 +121,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   struct Section *first_section = parse_file(file);
-
+  fclose(file);
   // Mode 1
   if (argv[2] == "expression") {
     char *expression        = argv[3];
@@ -146,5 +148,6 @@ int main(int argc, char *argv[]) {
         read_value_from_section(first_section, desired_section, desired_key);
     printf("%s", result);
   }
+
   return 0;
 }
