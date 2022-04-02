@@ -17,12 +17,16 @@ Mode 2 - section.key - only one,
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
 struct Key
 {
     char *key;
     char *value;
     struct Key *nextkey;
 };
+
 struct Section
 {
     char *name;
@@ -30,77 +34,78 @@ struct Section
     struct Section *nextsection;
 };
 
-struct Key *firstKey()
-{
-    /*struct Key *firstKey = malloc(sizeof(struct Key));
-    struct Key *nextKey = firstKey();
-    while (fgets(buf, sizeof buf, file) != NULL)
-    {
-        if (buf[0] == '[')
-        {
-            return firstKey;
-        }
-    }
-    firstKey->key = key;
-    firstKey->value = value;
-    firstKey->nextkey = NULL;
-    return firstKey;*/
-}
 // define parse function returning pointer to struct section
-struct section *parse_file(FILE *file)
+struct Section *parse_file(FILE *file)
 {
     char *buf = NULL;
-    struct section *sections = NULL;
+    struct Section *first_section = NULL;
+    struct Section *last_section = NULL;
+    struct Section *current_section = NULL;
+
+    struct Key *first_key = NULL;
+    struct Key *last_key = NULL;
+    struct Key *current_key = NULL;
+
     while (fgets(buf, sizeof buf, file) != NULL)
     {
         if (buf[0] == '[')
         {
-            // section
-            struct Section *section = malloc(sizeof(struct Section));
-            section->name = strtok(buf, "]");
-            section->keys = firstKey();
-            section->nextsection = NULL;
-            struct Section *lastsection = section;
+            // pass the pointers
+            current_section->keys = first_key;
+
+            last_section = current_section;
+            current_section = (struct Section *)malloc(sizeof(struct Section));
+            last_section->nextsection = current_section;
+
+            current_section->name = strtok(buf, "]"); // FIXME with leading [
+            // current_section->keys = firstKey();
+            // current_section->nextsection = NULL;
+        }
+
+        else if (isspace(buf[0]))
+        {
+            continue;
+        }
+        else
+        {
+            last_key = current_key;
+            current_key = (struct Key *)malloc(sizeof(struct Key));
+            last_key->nextkey = current_key;
+
+            current_key->key = strtok(buf, "="); // FIXME with leading spaces
+            current_key->value = strtok(NULL, "=");
         }
     }
-    return sections;
+    return first_section;
 }
-// define parse function returning pointer to struct section
+
 char *argv_validation(FILE *file)
 {
-    char *buf = NULL;
-    struct section *sections = NULL;
-    while (fgets(buf, sizeof buf, file) != NULL)
+}
+
+char *read_value_from_section(struct Section *first_section, char *section, char *key)
+{
+    struct Section *i_section = first_section;
+    while (i_section->name != section)
     {
-        if (buf[0] == '[')
-        {
-            // section
-            struct Section *section = malloc(sizeof(struct Section));
-            section->name = strtok(buf, "]");
-            section->keys = firstKey();
-            section->nextsection = NULL;
-            struct Section *lastsection = section;
-        }
+        if (i_section->nextsection == NULL)
+            return "Section not found";
+        i_section = i_section->nextsection;
     }
-    return sections;
-}
 
-char *read_value_from_section(char *first_section, char *section, char *key)
-{
-}
-
-char *get_section(char *state)
-{
-}
-
-char *get_key(char *state)
-{
+    struct Key *i_key = i_section->keys;
+    while (i_key->value != key)
+    {
+        if (i_key->nextkey == NULL)
+            return "Key not found";
+        i_key = i_key->nextkey;
+    }
+    return i_key;
 }
 
 int main(int argc, char *argv[])
 {
     char *path = argv[1];
-    char *state = argv[2];
     FILE *file = fopen(path, "r");
     if (file == NULL)
     {
@@ -109,8 +114,8 @@ int main(int argc, char *argv[])
     }
     struct Section *first_section = parse_file(file);
 
-    // handling expression input
-    if (*state == 'expression')
+    // Mode 1
+    if (argv[2] == 'expression')
     {
         char *expression = argv[3];
         char *validation_result = argv_validation(expression);
@@ -124,7 +129,7 @@ int main(int argc, char *argv[])
         }
         else if (validation_result == 'invalid')
         {
-            printf("Invalid arguments for program: %s\n", expression);
+            printf("Invalid arguments for expression: %s\n", expression);
             return 1;
         }
         else
@@ -133,11 +138,12 @@ int main(int argc, char *argv[])
             return 1;
         }
     }
-    // handling section.key input
+
+    // Mode2
     else
     {
-        char *desired_section = get_section(state);
-        char *desired_key = get_key(state);
+        char *desired_section = strtok(argv[2], ".");
+        char *desired_key = strtok(NULL, ".");
         char *result = read_value_from_section(first_section, desired_section, desired_key);
         printf("%s", result);
     }
