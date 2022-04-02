@@ -35,41 +35,39 @@ struct Section {
 // define parse function returning pointer to struct section
 struct Section *parse_file(FILE *file) {
   struct Section *first_section = malloc(sizeof(struct Section));
-  first_section->name = NULL;
-  first_section->keys = NULL;
-  first_section->nextsection = NULL;
+  first_section->name           = NULL;
+  first_section->keys           = NULL;
+  first_section->nextsection    = NULL;
   char buffer[1024];
-  while(fgets(buffer, 1024, file) != NULL) {
+  while (fgets(buffer, 1024, file) != NULL) {
     if (buffer[0] == '[') {
-      char *section_name = buffer;
-      section_name = strtok(section_name, "]");
+      char *section_name          = buffer;
+      section_name                = strtok(section_name, "]");
       struct Section *new_section = malloc(sizeof(struct Section));
+      new_section->name           = malloc(sizeof(char) * strlen(section_name));
       strcpy(new_section->name, section_name + 1);
-      new_section->keys = NULL;
+      new_section->keys        = NULL;
       new_section->nextsection = NULL;
       if (first_section->name == NULL) {
         first_section = new_section;
-      } 
-      else {
+      } else {
         struct Section *i_section = first_section;
         while (i_section->nextsection != NULL) {
           i_section = i_section->nextsection;
         }
         i_section->nextsection = new_section;
       }
-    } 
-    else {
-      char *key = strtok(buffer, "=");
+    } else {
+      char *key   = strtok(buffer, "=");
       char *value = strtok(NULL, "\n");
       value++;
       struct Key *new_key = malloc(sizeof(struct Key));
-      new_key->key = key;
-      new_key->value = value;
-      new_key->nextkey = NULL;
+      new_key->key        = key;
+      new_key->value      = value;
+      new_key->nextkey    = NULL;
       if (first_section->keys == NULL) {
         first_section->keys = new_key;
-      } 
-      else {
+      } else {
         struct Key *i_key = first_section->keys;
         while (i_key->nextkey != NULL) {
           i_key = i_key->nextkey;
