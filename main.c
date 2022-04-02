@@ -34,38 +34,48 @@ struct Section {
 
 // define parse function returning pointer to struct section
 struct Section *parse_file(FILE *file) {
-  char *buf                       = NULL;
-  struct Section *first_section   = NULL;
-  struct Section *last_section    = NULL;
-  struct Section *current_section = NULL;
-
-  struct Key *first_key   = NULL;
-  struct Key *last_key    = NULL;
-  struct Key *current_key = NULL;
-
-  while (fgets(buf, sizeof buf, file) != NULL) {
-    if (buf[0] == '[') {
-      // pass the pointers
-      current_section->keys = first_key;
-
-      last_section    = current_section;
-      current_section = (struct Section *)malloc(sizeof(struct Section));
-      last_section->nextsection = current_section;
-
-      current_section->name = strtok(buf, "]"); // FIXME with leading [
-      // current_section->keys = firstKey();
-      // current_section->nextsection = NULL;
-    }
-
-    else if (isspace(buf[0])) {
-      continue;
-    } else {
-      last_key          = current_key;
-      current_key       = (struct Key *)malloc(sizeof(struct Key));
-      last_key->nextkey = current_key;
-
-      current_key->key   = strtok(buf, "="); // FIXME with leading spaces
-      current_key->value = strtok(NULL, "=");
+  struct Section *first_section = malloc(sizeof(struct Section));
+  first_section->name = NULL;
+  first_section->keys = NULL;
+  first_section->nextsection = NULL;
+  char buffer[1024];
+  while(fgets(buffer, 1024, file) != NULL) {
+    if (buffer[0] == '[') {
+      char *section_name = buffer;
+      section_name = strtok(section_name, "]");
+      struct Section *new_section = malloc(sizeof(struct Section));
+      strcpy(new_section->name, section_name + 1);
+      new_section->keys = NULL;
+      new_section->nextsection = NULL;
+      if (first_section->name == NULL) {
+        first_section = new_section;
+      } 
+      else {
+        struct Section *i_section = first_section;
+        while (i_section->nextsection != NULL) {
+          i_section = i_section->nextsection;
+        }
+        i_section->nextsection = new_section;
+      }
+    } 
+    else {
+      char *key = strtok(buffer, "=");
+      char *value = strtok(NULL, "\n");
+      value++;
+      struct Key *new_key = malloc(sizeof(struct Key));
+      new_key->key = key;
+      new_key->value = value;
+      new_key->nextkey = NULL;
+      if (first_section->keys == NULL) {
+        first_section->keys = new_key;
+      } 
+      else {
+        struct Key *i_key = first_section->keys;
+        while (i_key->nextkey != NULL) {
+          i_key = i_key->nextkey;
+        }
+        i_key->nextkey = new_key;
+      }
     }
   }
   return first_section;
