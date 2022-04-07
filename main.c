@@ -89,8 +89,10 @@ struct Section *parse_file(FILE *file) {
   }
   return first_section;
 }
-
-char *argv_validation(char *argv) {}
+char *identifier_validation(char *argv) {
+}
+char *expr_validation(char *argv) {
+}
 
 char *read_value_from_section(struct Section *first_section, char *section, char *key) {
 
@@ -146,7 +148,7 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     char *expression        = argv[3];
-    char *validation_result = argv_validation(expression);
+    char *validation_result = expr_validation(expression);
     if (strcmp(validation_result, "int") == 0) {
       // to implement
     } else if (strcmp(validation_result, "string") == 0) {
