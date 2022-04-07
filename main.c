@@ -92,14 +92,13 @@ struct Section *parse_file(FILE *file) {
 
 char *argv_validation(char *argv) {}
 
-char *read_value_from_section(struct Section *first_section, char *section,
-                              char *key) {
+char *read_value_from_section(struct Section *first_section, char *section, char *key) {
 
   struct Section *i_section = malloc(sizeof(struct Section));
   i_section                 = first_section;
   while (strcmp(i_section->name, section) != 0) {
     if (i_section->nextsection == NULL)
-      return "Section not found";
+      return "Error:section-not-found";
     i_section = i_section->nextsection;
   }
 
@@ -107,7 +106,7 @@ char *read_value_from_section(struct Section *first_section, char *section,
   i_key             = i_section->keys;
   while (strcmp(i_key->key, key) != 0) {
     if (i_key->nextkey == NULL)
-      return "Key not found";
+      return "Error:key-not-found";
     i_key = i_key->nextkey;
   }
   return i_key->value;
@@ -134,8 +133,7 @@ int main(int argc, char *argv[]) {
       printf("Invalid arguments for expression: %s\n", expression);
       return 1;
     } else {
-      printf("Unexpected return from argv_validation function: %s\n",
-             validation_result);
+      printf("Unexpected return from argv_validation function: %s\n", validation_result);
       return 1;
     }
   }
@@ -144,9 +142,35 @@ int main(int argc, char *argv[]) {
   else {
     char *desired_section = strtok(argv[2], ".");
     char *desired_key     = strtok(NULL, ".");
-    char *result =
-        read_value_from_section(first_section, desired_section, desired_key);
-    printf("%s", result);
+    char *result          = read_value_from_section(first_section, desired_section, desired_key);
+    if (strcmp("Error:section-not-found", result)) {
+
+      printf("Failed to find section [%s]", desired_section);
+      return 1;
+
+    } else if (strcmp("Error:key-not-found", result)) {
+
+      printf("Failed to find key \"%s\" in section [%s]", desired_key, desired_section);
+      return 1;
+
+    } else
+      printf("%s", result);
+  }
+
+  // free memory
+  struct Section *i_section = malloc(sizeof(struct Section));
+  i_section                 = first_section;
+  while (i_section->nextsection != NULL) {
+    struct Key *i_key = malloc(sizeof(struct Key));
+    i_key             = i_section->keys;
+    while (i_key->nextkey != NULL) {
+      free(i_key->key);
+      free(i_key->value);
+      i_key = i_key->nextkey;
+    }
+    free(i_section->name);
+    free(i_section->keys);
+    i_section = i_section->nextsection;
   }
 
   return 0;

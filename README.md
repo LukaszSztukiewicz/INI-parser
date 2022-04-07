@@ -2,3 +2,7 @@
 
 Formatter - Clang 15.0.0
 https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+Compile with flags -Wall -Wextra
+
+Use Valgrind
