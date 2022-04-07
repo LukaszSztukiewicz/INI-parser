@@ -126,8 +126,9 @@ char *parse_expression(struct Section *parsed_sections, char *expression) {
   char *second_argument_section = strtok(second_argument, ".") + 1;
   char *second_argument_key     = strtok(NULL, ".");
   char *second_value            = read_value_from_section(parsed_sections, second_argument_section, second_argument_key);
-
-  if (is_integer_value(first_value) && is_integer_value(second_value)) {
+  bool is_int_first_value       = is_integer_value(first_value);
+  bool is_int_second_value      = is_integer_value(second_value);
+  if (is_int_first_value && is_int_second_value) {
     int first_int_value  = atoi(first_value);
     int second_int_value = atoi(second_value);
     switch (*operand) {
@@ -147,11 +148,14 @@ char *parse_expression(struct Section *parsed_sections, char *expression) {
       printf("%d", first_int_value % second_int_value);
       break;
     }
+    return "";
+  } else if ((is_int_first_value && !is_int_second_value) || (!is_int_first_value && is_int_second_value)) {
+    return "Error:invalid-operation type mismatch";
   } else {
     if (*operand != '+')
-      return "Error:invalid-operand";
+      return "Error:invalid-operation on string";
     else
-      printf("%s", first_value + second_int_value); // concat strings
+      return strcat(first_value, second_value);
   }
 }
 
