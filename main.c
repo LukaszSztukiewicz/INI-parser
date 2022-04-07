@@ -2,7 +2,7 @@
 ==============================================
                 INI PARSER
 Input formats:
- 1. ./program PATH_TO_INI expression "section.key+section.key"
+ 1. ./program PATH_TO_INI expression "section.key+section2.key2"
  2. ./program PATH_TO_INI section.key
 
  Structure of ini save:
@@ -51,20 +51,18 @@ bool is_integer_value(char *value) {
   return true;
 }
 void free_mem(struct Section *first_section) {
-  struct Section *i_section = malloc(sizeof(struct Section));
-  i_section                 = first_section;
-  while (i_section->nextsection != NULL) {
-    struct Key *i_key = malloc(sizeof(struct Key));
-    i_key             = i_section->keys;
-    while (i_key->nextkey != NULL) {
-      free(i_key->key);
-      free(i_key->value);
-      i_key = i_key->nextkey;
+  while (first_section != NULL) {
+    while (first_section->keys != NULL) {
+      free(first_section->keys->key);
+      free(first_section->keys->value);
+
+      first_section->keys = first_section->keys->nextkey;
     }
-    free(i_section->name);
-    free(i_section->keys);
-    i_section = i_section->nextsection;
+    free(first_section->keys);
+    free(first_section->name);
+    first_section = first_section->nextsection;
   }
+  free(first_section);
 }
 
 // define parse function returning pointer to first struct section
@@ -74,6 +72,7 @@ struct Section *parse_file(FILE *file) {
   first_section->keys           = NULL;
   first_section->nextsection    = NULL;
   char buffer[1024];
+
   while (fgets(buffer, 1024, file) != NULL) {
     if (buffer[0] == '[') {
       char *section_name = buffer;
@@ -81,7 +80,7 @@ struct Section *parse_file(FILE *file) {
       section_name       = section_name + 1;
       if (is_identifier_valid(section_name)) {
         struct Section *new_section = malloc(sizeof(struct Section));
-        new_section->name           = malloc(sizeof(char) * strlen(section_name));
+        new_section->name           = malloc(sizeof(char) * strlen(section_name) + 1);
         strcpy(new_section->name, section_name);
         new_section->keys        = NULL;
         new_section->nextsection = NULL;
@@ -107,9 +106,9 @@ struct Section *parse_file(FILE *file) {
         struct Key *new_key = malloc(sizeof(struct Key));
         new_key->value      = NULL;
         new_key->nextkey    = NULL;
-        new_key->key        = malloc(sizeof(char) * strlen(key));
+        new_key->key        = malloc(sizeof(char) * strlen(key) + 1);
         strcpy(new_key->key, key);
-        new_key->value = malloc(sizeof(char) * strlen(value));
+        new_key->value = malloc(sizeof(char) * strlen(value) + 1);
         strcpy(new_key->value, value + 1);
         struct Section *i_section = first_section;
         while (i_section->nextsection != NULL) {
@@ -162,7 +161,7 @@ char *parse_expression(struct Section *parsed_sections, char *expression) {
   char *second_value            = read_value_from_section(parsed_sections, second_argument_section, second_argument_key);
   bool is_int_first_value       = is_integer_value(first_value);
   bool is_int_second_value      = is_integer_value(second_value);
-  char *message                 = malloc(sizeof(char) * (strlen(first_value) + strlen(second_value)));
+  char *message                 = malloc(sizeof(char) * (strlen(first_value) + strlen(second_value)) + 1);
   if (is_int_first_value && is_int_second_value) {
     long first_int_value  = atol(first_value);
     long second_int_value = atol(second_value);
@@ -206,7 +205,6 @@ int main(int argc, char *argv[]) {
 
   // Mode 1
   if ((strcmp(argv[2], "expression") == 0)) {
-    // check for proper number of arguments
     if (argc != 4) {
       printf("Bad number of arguments\n");
       free_mem(first_section);
@@ -233,9 +231,6 @@ int main(int argc, char *argv[]) {
       printf("%s", result);
     }
   }
-
-  // free memory
   free_mem(first_section);
-
   return 0;
 }
