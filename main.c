@@ -223,12 +223,10 @@ int main(int argc, char *argv[]) {
     char *result          = read_value_from_section(first_section, desired_section, desired_key);
     if (strcmp("Error:section-not-found", result) == 0) {
       printf("Failed to find section [%s]", desired_section);
-      free(result);
       free_mem(first_section);
       return 1;
     } else if (strcmp("Error:key-not-found", result) == 0) {
       printf("Failed to find key \"%s\" in section [%s]", desired_key, desired_section);
-      free(result);
       free_mem(first_section);
       return 1;
     } else {
