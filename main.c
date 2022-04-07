@@ -15,8 +15,8 @@ Mode 2 - section.key - only one,
 ==============================================
 */
 
-#include <bool.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +33,7 @@ struct Section {
   struct Section *nextsection;
 };
 
-// define parse function returning pointer to struct section
+// define parse function returning pointer to first struct section
 struct Section *parse_file(FILE *file) {
   struct Section *first_section = malloc(sizeof(struct Section));
   first_section->name           = NULL;
@@ -44,7 +44,7 @@ struct Section *parse_file(FILE *file) {
     if (buffer[0] == '[') {
       char *section_name = buffer;
       section_name       = strtok(section_name, "]");
-      if (is_identifier_valid(key)) {
+      if (is_identifier_valid(*section_name)) {
         struct Section *new_section = malloc(sizeof(struct Section));
         new_section->name           = malloc(sizeof(char) * strlen(section_name));
         strcpy(new_section->name, section_name + 1);
@@ -60,14 +60,14 @@ struct Section *parse_file(FILE *file) {
           i_section->nextsection = new_section;
         }
       } else
-        printf("Invalid section identifier %s in INI file", *section_name);
+        printf("Invalid section identifier \"%s\" in INI file", *section_name);
     } else if (buffer[0] == '\n') {
       continue;
     } else {
       char *key_value = buffer;
       char *key       = strtok(key_value, "=");
       char *value     = strtok(NULL, "\n");
-      if (is_identifier_valid(key)) {
+      if (is_identifier_valid(*key)) {
         struct Key *new_key  = malloc(sizeof(struct Key));
         new_key->key         = NULL;
         new_key->value       = NULL;
@@ -91,7 +91,7 @@ struct Section *parse_file(FILE *file) {
           i_key->nextkey = new_key;
         }
       } else
-        printf("Invalid key identifier %s in INI file", *key);
+        printf("Invalid key identifier \"%s\" in INI file", *key);
     }
   }
   return first_section;
@@ -106,11 +106,11 @@ bool *is_identifier_valid(char *identifier) {
   return true;
 }
 char *parse_expression(char *expression) {
+  int *first_argument  = strtok(expression, " ");
+  int *operand         = strtok(NULL, " ");
+  int *second_argument = strtok(NULL, " ");
+  int *result          = int_expression(first_argument, second_argument, operand);
   if (strcmp(validation_result, "int") == 0) {
-    int *first_argument  = strtok(expression, " ");
-    int *operand         = strtok(NULL, " ");
-    int *second_argument = strtok(NULL, " ");
-    int *result          = int_expression(first_argument, second_argument, operand);
   } else if (strcmp(validation_result, "string") == 0) {
     char *first_argument         = strtok(expression, " ");
     char *second_argument        = strtok(NULL, " ");
