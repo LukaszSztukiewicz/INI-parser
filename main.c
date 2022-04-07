@@ -6,12 +6,10 @@ Input formats:
  2. ./program PATH_TO_INI section.key
 
  Structure of ini save:
-    [section] -> [keyke]
+    [section] -> [key]
 
-Mode 1 - expr eval
-Mode 2 - section.key - only one,
-
-
+Mode 1 - expression evaluation
+Mode 2 - displaying value of section.key
 ==============================================
 */
 
@@ -155,15 +153,13 @@ char *read_value_from_section(struct Section *first_section, char *section, char
 }
 
 char *parse_expression(struct Section *parsed_sections, char *expression) {
-  char *first_argument  = strtok(expression, " ");
-  char *operand         = strtok(NULL, " ");
-  char *second_argument = strtok(NULL, " ");
-  // int *result          = int_expression(first_argument, second_argument, operand);
-  char *first_argument_section  = strtok(first_argument, ".") + 1;
-  char *first_argument_key      = strtok(NULL, ".");
+  char *message                 = malloc(sizeof(char) * 100);
+  char *first_argument_section  = strtok(expression, " .");
+  char *first_argument_key      = strtok(NULL, " .");
   char *first_value             = read_value_from_section(parsed_sections, first_argument_section, first_argument_key);
-  char *second_argument_section = strtok(second_argument, ".") + 1;
-  char *second_argument_key     = strtok(NULL, ".");
+  char *operand                 = strtok(NULL, " .");
+  char *second_argument_section = strtok(NULL, " .");
+  char *second_argument_key     = strtok(NULL, " .");
   char *second_value            = read_value_from_section(parsed_sections, second_argument_section, second_argument_key);
   bool is_int_first_value       = is_integer_value(first_value);
   bool is_int_second_value      = is_integer_value(second_value);
@@ -187,15 +183,16 @@ char *parse_expression(struct Section *parsed_sections, char *expression) {
       printf("%d", first_int_value % second_int_value);
       break;
     }
-    return "";
+    strcpy(message, "");
   } else if ((is_int_first_value && !is_int_second_value) || (!is_int_first_value && is_int_second_value)) {
-    return "Error:invalid-operation type mismatch";
+    strcpy(message, "Error:invalid-operation type mismatch");
   } else {
     if (*operand != '+')
-      return "Error:invalid-operation on string";
+      strcpy(message, "Error:invalid-operation on string");
     else
-      return strcat(first_value, second_value);
+      message = strcat(first_value, second_value);
   }
+  return message;
 }
 
 int main(int argc, char *argv[]) {
