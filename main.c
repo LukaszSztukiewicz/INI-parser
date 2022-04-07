@@ -105,27 +105,53 @@ bool *is_identifier_valid(char *identifier) {
   }
   return true;
 }
-char *parse_expression(char *expression) {
-  int *first_argument  = strtok(expression, " ");
-  int *operand         = strtok(NULL, " ");
-  int *second_argument = strtok(NULL, " ");
-  int *result          = int_expression(first_argument, second_argument, operand);
-  if (strcmp(validation_result, "int") == 0) {
-  } else if (strcmp(validation_result, "string") == 0) {
-    char *first_argument         = strtok(expression, " ");
-    char *second_argument        = strtok(NULL, " ");
-    char *first_argument_section = strtok(first_argument, ".");
-    char *first_argument_key     = strtok(NULL, ".");
-    int *result                  = *first_argument + *second_argument;
+bool *is_integer_value(char *value) {
+  int length = strlen(value);
+  for (int i = 0; i < length; i++) {
+    if (!isdigit(value[i])) {
+      return false;
+    }
+  }
+  return true;
+}
 
-  } else if (strcmp(validation_result, "invalid") == 0) {
-    printf("Invalid arguments for expression: %s\n", expression);
-    free_mem(first_section);
-    return 1;
+char *parse_expression(struct Section *parsed_sections, char *expression) {
+  char *first_argument  = strtok(expression, " ");
+  char *operand         = strtok(NULL, " ");
+  char *second_argument = strtok(NULL, " ");
+  // int *result          = int_expression(first_argument, second_argument, operand);
+  char *first_argument_section  = strtok(first_argument, ".") + 1;
+  char *first_argument_key      = strtok(NULL, ".");
+  char *first_value             = read_value_from_section(parsed_sections, first_argument_section, first_argument_key);
+  char *second_argument_section = strtok(second_argument, ".") + 1;
+  char *second_argument_key     = strtok(NULL, ".");
+  char *second_value            = read_value_from_section(parsed_sections, second_argument_section, second_argument_key);
+
+  if (is_integer_value(first_value) && is_integer_value(second_value)) {
+    int first_int_value  = atoi(first_value);
+    int second_int_value = atoi(second_value);
+    switch (*operand) {
+    case '+':
+      printf("%d", first_int_value + second_int_value);
+      break;
+    case '-':
+      printf("%d", first_int_value - second_int_value);
+      break;
+    case '*':
+      printf("%d", first_int_value * second_int_value);
+      break;
+    case '/':
+      printf("%d", first_int_value / second_int_value);
+      break;
+    case '%':
+      printf("%d", first_int_value % second_int_value);
+      break;
+    }
   } else {
-    printf("Unexpected return from argv_validation function: %s\n", validation_result);
-    free_mem(first_section);
-    return 1;
+    if (*operand != '+')
+      return "Error:invalid-operand";
+    else
+      printf("%s", first_value + second_int_value); // concat strings
   }
 }
 
@@ -185,6 +211,7 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     char *result = parse_expression(argv[3]);
+    printf("%s", result);
   }
 
   // Mode2
