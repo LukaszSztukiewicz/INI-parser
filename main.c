@@ -140,19 +140,31 @@ int main(int argc, char *argv[]) {
   }
   struct Section *first_section = parse_file(file);
   fclose(file);
+
   // Mode 1
   if ((strcmp(argv[2], "expression") == 0)) {
+    // check for proper number of arguments
     if (argc != 4) {
       printf("Bad number of arguments\n");
       free_mem(first_section);
       return 1;
     }
-    char *expression        = argv[3];
-    char *validation_result = expr_validation(expression);
+    // validate expression and check is it integer or string operation
+    char *expression = argv[3];
+    char *result     = parse_(expression);
+
     if (strcmp(validation_result, "int") == 0) {
-      // to implement
+      int *first_argument  = strtok(expression, " ");
+      int *operand         = strtok(NULL, " ");
+      int *second_argument = strtok(NULL, " ");
+      int *result          = int_expression(first_argument, second_argument, operand);
     } else if (strcmp(validation_result, "string") == 0) {
-      // to implement
+      char *first_argument         = strtok(expression, " ");
+      char *second_argument        = strtok(NULL, " ");
+      char *first_argument_section = strtok(first_argument, ".");
+      char *first_argument_key     = strtok(NULL, ".");
+      int *result                  = *first_argument + *second_argument;
+
     } else if (strcmp(validation_result, "invalid") == 0) {
       printf("Invalid arguments for expression: %s\n", expression);
       free_mem(first_section);
