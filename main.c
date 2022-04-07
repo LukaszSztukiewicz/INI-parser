@@ -33,6 +33,42 @@ struct Section {
   struct Section *nextsection;
 };
 
+// utility functions
+bool is_identifier_valid(char *identifier) {
+  int length = strlen(identifier);
+  for (int i = 0; i < length; i++) {
+    if (!isalnum(identifier[i]) && identifier[i] != '-') {
+      return false;
+    }
+  }
+  return true;
+}
+bool is_integer_value(char *value) {
+  int length = strlen(value);
+  for (int i = 0; i < length; i++) {
+    if (!isdigit(value[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+void free_mem(struct Section *first_section) {
+  struct Section *i_section = malloc(sizeof(struct Section));
+  i_section                 = first_section;
+  while (i_section->nextsection != NULL) {
+    struct Key *i_key = malloc(sizeof(struct Key));
+    i_key             = i_section->keys;
+    while (i_key->nextkey != NULL) {
+      free(i_key->key);
+      free(i_key->value);
+      i_key = i_key->nextkey;
+    }
+    free(i_section->name);
+    free(i_section->keys);
+    i_section = i_section->nextsection;
+  }
+}
+
 // define parse function returning pointer to first struct section
 struct Section *parse_file(FILE *file) {
   struct Section *first_section = malloc(sizeof(struct Section));
@@ -44,7 +80,7 @@ struct Section *parse_file(FILE *file) {
     if (buffer[0] == '[') {
       char *section_name = buffer;
       section_name       = strtok(section_name, "]");
-      if (is_identifier_valid(*section_name)) {
+      if (is_identifier_valid(section_name)) {
         struct Section *new_section = malloc(sizeof(struct Section));
         new_section->name           = malloc(sizeof(char) * strlen(section_name));
         strcpy(new_section->name, section_name + 1);
@@ -60,14 +96,14 @@ struct Section *parse_file(FILE *file) {
           i_section->nextsection = new_section;
         }
       } else
-        printf("Invalid section identifier \"%s\" in INI file", *section_name);
+        printf("Invalid section identifier \"%s\" in INI file", section_name);
     } else if (buffer[0] == '\n') {
       continue;
     } else {
       char *key_value = buffer;
       char *key       = strtok(key_value, "=");
       char *value     = strtok(NULL, "\n");
-      if (is_identifier_valid(*key)) {
+      if (is_identifier_valid(key)) {
         struct Key *new_key  = malloc(sizeof(struct Key));
         new_key->key         = NULL;
         new_key->value       = NULL;
@@ -91,28 +127,31 @@ struct Section *parse_file(FILE *file) {
           i_key->nextkey = new_key;
         }
       } else
-        printf("Invalid key identifier \"%s\" in INI file", *key);
+        printf("Invalid key identifier \"%s\" in INI file", key);
     }
   }
   return first_section;
 }
-bool *is_identifier_valid(char *identifier) {
-  int length = strlen(identifier);
-  for (int i = 0; i < length; i++) {
-    if (!isalnum(identifier[i]) && identifier[i] != '-') {
-      return false;
-    }
+
+char *read_value_from_section(struct Section *first_section, char *section, char *key) {
+
+  struct Section *i_section = malloc(sizeof(struct Section));
+  i_section                 = first_section;
+  while (strcmp(i_section->name, section) != 0) {
+    if (i_section->nextsection == NULL)
+      return "Error:section-not-found";
+    i_section = i_section->nextsection;
   }
-  return true;
-}
-bool *is_integer_value(char *value) {
-  int length = strlen(value);
-  for (int i = 0; i < length; i++) {
-    if (!isdigit(value[i])) {
-      return false;
-    }
+
+  struct Key *i_key = malloc(sizeof(struct Key));
+  i_key             = i_section->keys;
+  while (strcmp(i_key->key, key) != 0) {
+    if (i_key->nextkey == NULL)
+      return "Error:key-not-found";
+    i_key = i_key->nextkey;
   }
-  return true;
+
+  return i_key->value;
 }
 
 char *parse_expression(struct Section *parsed_sections, char *expression) {
@@ -159,43 +198,6 @@ char *parse_expression(struct Section *parsed_sections, char *expression) {
   }
 }
 
-char *read_value_from_section(struct Section *first_section, char *section, char *key) {
-
-  struct Section *i_section = malloc(sizeof(struct Section));
-  i_section                 = first_section;
-  while (strcmp(i_section->name, section) != 0) {
-    if (i_section->nextsection == NULL)
-      return "Error:section-not-found";
-    i_section = i_section->nextsection;
-  }
-
-  struct Key *i_key = malloc(sizeof(struct Key));
-  i_key             = i_section->keys;
-  while (strcmp(i_key->key, key) != 0) {
-    if (i_key->nextkey == NULL)
-      return "Error:key-not-found";
-    i_key = i_key->nextkey;
-  }
-  return i_key->value;
-}
-
-void free_mem(struct Section *first_section) {
-  struct Section *i_section = malloc(sizeof(struct Section));
-  i_section                 = first_section;
-  while (i_section->nextsection != NULL) {
-    struct Key *i_key = malloc(sizeof(struct Key));
-    i_key             = i_section->keys;
-    while (i_key->nextkey != NULL) {
-      free(i_key->key);
-      free(i_key->value);
-      i_key = i_key->nextkey;
-    }
-    free(i_section->name);
-    free(i_section->keys);
-    i_section = i_section->nextsection;
-  }
-}
-
 int main(int argc, char *argv[]) {
   char *path = argv[1];
   FILE *file = fopen(path, "r");
@@ -214,7 +216,7 @@ int main(int argc, char *argv[]) {
       free_mem(first_section);
       return 1;
     }
-    char *result = parse_expression(argv[3]);
+    char *result = parse_expression(first_section, argv[3]);
     printf("%s", result);
   }
 
