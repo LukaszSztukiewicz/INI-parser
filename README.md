@@ -36,7 +36,7 @@ Created by Łukasz Sztukiewicz & Michał Wiliński.
 
 > 143
 
-3. Displaying total of bytes used by logs files
+3. Displaying the total of bytes used by logs files
 
 > [log]
 > files = 10
@@ -46,7 +46,7 @@ Created by Łukasz Sztukiewicz & Michał Wiliński.
 
 > 2560
 >
-> 3. Displaying username with organization postfix
+> 4. Displaying username with organization postfix
 
 > [user]
 > name = John
