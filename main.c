@@ -15,6 +15,7 @@ Mode 2 - section.key - only one,
 ==============================================
 */
 
+#include <bool.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,57 +42,91 @@ struct Section *parse_file(FILE *file) {
   char buffer[1024];
   while (fgets(buffer, 1024, file) != NULL) {
     if (buffer[0] == '[') {
-      char *section_name          = buffer;
-      section_name                = strtok(section_name, "]");
-      struct Section *new_section = malloc(sizeof(struct Section));
-      new_section->name           = malloc(sizeof(char) * strlen(section_name));
-      strcpy(new_section->name, section_name + 1);
-      new_section->keys        = NULL;
-      new_section->nextsection = NULL;
-      if (first_section->name == NULL) {
-        first_section = new_section;
-      } else {
+      char *section_name = buffer;
+      section_name       = strtok(section_name, "]");
+      if (is_identifier_valid(key)) {
+        struct Section *new_section = malloc(sizeof(struct Section));
+        new_section->name           = malloc(sizeof(char) * strlen(section_name));
+        strcpy(new_section->name, section_name + 1);
+        new_section->keys        = NULL;
+        new_section->nextsection = NULL;
+        if (first_section->name == NULL) {
+          first_section = new_section;
+        } else {
+          struct Section *i_section = first_section;
+          while (i_section->nextsection != NULL) {
+            i_section = i_section->nextsection;
+          }
+          i_section->nextsection = new_section;
+        }
+      } else
+        printf("Invalid section identifier %s in INI file", *section_name);
+    } else if (buffer[0] == '\n') {
+      continue;
+    } else {
+      char *key_value = buffer;
+      char *key       = strtok(key_value, "=");
+      char *value     = strtok(NULL, "\n");
+      if (is_identifier_valid(key)) {
+        struct Key *new_key  = malloc(sizeof(struct Key));
+        new_key->key         = NULL;
+        new_key->value       = NULL;
+        new_key->nextkey     = NULL;
+        new_key->key         = malloc(sizeof(char) * strlen(key));
+        key[strlen(key) - 1] = '\0';
+        strcpy(new_key->key, key);
+        new_key->value = malloc(sizeof(char) * strlen(value));
+        strcpy(new_key->value, value + 1);
         struct Section *i_section = first_section;
         while (i_section->nextsection != NULL) {
           i_section = i_section->nextsection;
         }
-        i_section->nextsection = new_section;
-      }
-    } else if (buffer[0] == '\n') {
-      continue;
-    } else {
-      char *key_value      = buffer;
-      char *key            = strtok(key_value, "=");
-      char *value          = strtok(NULL, "\n");
-      struct Key *new_key  = malloc(sizeof(struct Key));
-      new_key->key         = NULL;
-      new_key->value       = NULL;
-      new_key->nextkey     = NULL;
-      new_key->key         = malloc(sizeof(char) * strlen(key));
-      key[strlen(key) - 1] = '\0';
-      strcpy(new_key->key, key);
-      new_key->value = malloc(sizeof(char) * strlen(value));
-      strcpy(new_key->value, value + 1);
-      struct Section *i_section = first_section;
-      while (i_section->nextsection != NULL) {
-        i_section = i_section->nextsection;
-      }
-      if (i_section->keys == NULL) {
-        i_section->keys = new_key;
-      } else {
-        struct Key *i_key = i_section->keys;
-        while (i_key->nextkey != NULL) {
-          i_key = i_key->nextkey;
+        if (i_section->keys == NULL) {
+          i_section->keys = new_key;
+        } else {
+          struct Key *i_key = i_section->keys;
+          while (i_key->nextkey != NULL) {
+            i_key = i_key->nextkey;
+          }
+          i_key->nextkey = new_key;
         }
-        i_key->nextkey = new_key;
-      }
+      } else
+        printf("Invalid key identifier %s in INI file", *key);
     }
   }
   return first_section;
 }
-char *identifier_validation(char *argv) {
+bool *is_identifier_valid(char *identifier) {
+  int length = strlen(identifier);
+  for (int i = 0; i < length; i++) {
+    if (!isalnum(identifier[i]) && identifier[i] != '-') {
+      return false;
+    }
+  }
+  return true;
 }
-char *expr_validation(char *argv) {
+char *parse_expression(char *expression) {
+  if (strcmp(validation_result, "int") == 0) {
+    int *first_argument  = strtok(expression, " ");
+    int *operand         = strtok(NULL, " ");
+    int *second_argument = strtok(NULL, " ");
+    int *result          = int_expression(first_argument, second_argument, operand);
+  } else if (strcmp(validation_result, "string") == 0) {
+    char *first_argument         = strtok(expression, " ");
+    char *second_argument        = strtok(NULL, " ");
+    char *first_argument_section = strtok(first_argument, ".");
+    char *first_argument_key     = strtok(NULL, ".");
+    int *result                  = *first_argument + *second_argument;
+
+  } else if (strcmp(validation_result, "invalid") == 0) {
+    printf("Invalid arguments for expression: %s\n", expression);
+    free_mem(first_section);
+    return 1;
+  } else {
+    printf("Unexpected return from argv_validation function: %s\n", validation_result);
+    free_mem(first_section);
+    return 1;
+  }
 }
 
 char *read_value_from_section(struct Section *first_section, char *section, char *key) {
@@ -149,31 +184,7 @@ int main(int argc, char *argv[]) {
       free_mem(first_section);
       return 1;
     }
-    // validate expression and check is it integer or string operation
-    char *expression = argv[3];
-    char *result     = parse_(expression);
-
-    if (strcmp(validation_result, "int") == 0) {
-      int *first_argument  = strtok(expression, " ");
-      int *operand         = strtok(NULL, " ");
-      int *second_argument = strtok(NULL, " ");
-      int *result          = int_expression(first_argument, second_argument, operand);
-    } else if (strcmp(validation_result, "string") == 0) {
-      char *first_argument         = strtok(expression, " ");
-      char *second_argument        = strtok(NULL, " ");
-      char *first_argument_section = strtok(first_argument, ".");
-      char *first_argument_key     = strtok(NULL, ".");
-      int *result                  = *first_argument + *second_argument;
-
-    } else if (strcmp(validation_result, "invalid") == 0) {
-      printf("Invalid arguments for expression: %s\n", expression);
-      free_mem(first_section);
-      return 1;
-    } else {
-      printf("Unexpected return from argv_validation function: %s\n", validation_result);
-      free_mem(first_section);
-      return 1;
-    }
+    char *result = parse_expression(argv[3]);
   }
 
   // Mode2
