@@ -80,10 +80,11 @@ struct Section *parse_file(FILE *file) {
     if (buffer[0] == '[') {
       char *section_name = buffer;
       section_name       = strtok(section_name, "]");
+      section_name       = section_name + 1;
       if (is_identifier_valid(section_name)) {
         struct Section *new_section = malloc(sizeof(struct Section));
         new_section->name           = malloc(sizeof(char) * strlen(section_name));
-        strcpy(new_section->name, section_name + 1);
+        strcpy(new_section->name, section_name);
         new_section->keys        = NULL;
         new_section->nextsection = NULL;
         if (first_section->name == NULL) {
@@ -96,20 +97,19 @@ struct Section *parse_file(FILE *file) {
           i_section->nextsection = new_section;
         }
       } else
-        printf("Invalid section identifier \"%s\" in INI file", section_name);
+        printf("Invalid section identifier \"%s\" in INI file\n", section_name);
     } else if (buffer[0] == '\n') {
       continue;
     } else {
-      char *key_value = buffer;
-      char *key       = strtok(key_value, "=");
-      char *value     = strtok(NULL, "\n");
+      char *key_value      = buffer;
+      char *key            = strtok(key_value, "=");
+      char *value          = strtok(NULL, "\n");
+      key[strlen(key) - 1] = '\0';
       if (is_identifier_valid(key)) {
-        struct Key *new_key  = malloc(sizeof(struct Key));
-        new_key->key         = NULL;
-        new_key->value       = NULL;
-        new_key->nextkey     = NULL;
-        new_key->key         = malloc(sizeof(char) * strlen(key));
-        key[strlen(key) - 1] = '\0';
+        struct Key *new_key = malloc(sizeof(struct Key));
+        new_key->value      = NULL;
+        new_key->nextkey    = NULL;
+        new_key->key        = malloc(sizeof(char) * strlen(key));
         strcpy(new_key->key, key);
         new_key->value = malloc(sizeof(char) * strlen(value));
         strcpy(new_key->value, value + 1);
@@ -127,7 +127,7 @@ struct Section *parse_file(FILE *file) {
           i_key->nextkey = new_key;
         }
       } else
-        printf("Invalid key identifier \"%s\" in INI file", key);
+        printf("Invalid key identifier \"%s\" in INI file\n", key);
     }
   }
   return first_section;
