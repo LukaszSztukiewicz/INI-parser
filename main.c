@@ -112,52 +112,7 @@ char *read_value_from_section(struct Section *first_section, char *section, char
   return i_key->value;
 }
 
-int main(int argc, char *argv[]) {
-  char *path = argv[1];
-  FILE *file = fopen(path, "r");
-  if (file == NULL) {
-    printf("File not found\n");
-    return 1;
-  }
-  struct Section *first_section = parse_file(file);
-  fclose(file);
-  // Mode 1
-  if (argv[2] == "expression") {
-    char *expression        = argv[3];
-    char *validation_result = argv_validation(expression);
-    if (validation_result == "int") {
-      // to implement
-    } else if (validation_result == "string") {
-      // to implement
-    } else if (validation_result == "invalid") {
-      printf("Invalid arguments for expression: %s\n", expression);
-      return 1;
-    } else {
-      printf("Unexpected return from argv_validation function: %s\n", validation_result);
-      return 1;
-    }
-  }
-
-  // Mode2
-  else {
-    char *desired_section = strtok(argv[2], ".");
-    char *desired_key     = strtok(NULL, ".");
-    char *result          = read_value_from_section(first_section, desired_section, desired_key);
-    if (strcmp("Error:section-not-found", result)) {
-
-      printf("Failed to find section [%s]", desired_section);
-      return 1;
-
-    } else if (strcmp("Error:key-not-found", result)) {
-
-      printf("Failed to find key \"%s\" in section [%s]", desired_key, desired_section);
-      return 1;
-
-    } else
-      printf("%s", result);
-  }
-
-  // free memory
+void free_mem(struct Section *first_section) {
   struct Section *i_section = malloc(sizeof(struct Section));
   i_section                 = first_section;
   while (i_section->nextsection != NULL) {
@@ -172,6 +127,60 @@ int main(int argc, char *argv[]) {
     free(i_section->keys);
     i_section = i_section->nextsection;
   }
+}
+
+int main(int argc, char *argv[]) {
+  char *path = argv[1];
+  FILE *file = fopen(path, "r");
+  if (file == NULL) {
+    printf("File not found\n");
+    return 1;
+  }
+  struct Section *first_section = parse_file(file);
+  fclose(file);
+  // Mode 1
+  if ((strcmp(argv[2], "expression") == 0)) {
+    if (argc != 4) {
+      printf("Bad number of arguments\n");
+      free_mem(first_section);
+      return 1;
+    }
+    char *expression        = argv[3];
+    char *validation_result = argv_validation(expression);
+    if (strcmp(validation_result, "int") == 0) {
+      // to implement
+    } else if (strcmp(validation_result, "string") == 0) {
+      // to implement
+    } else if (strcmp(validation_result, "invalid") == 0) {
+      printf("Invalid arguments for expression: %s\n", expression);
+      free_mem(first_section);
+      return 1;
+    } else {
+      printf("Unexpected return from argv_validation function: %s\n", validation_result);
+      free_mem(first_section);
+      return 1;
+    }
+  }
+
+  // Mode2
+  else {
+    char *desired_section = strtok(argv[2], ".");
+    char *desired_key     = strtok(NULL, ".");
+    char *result          = read_value_from_section(first_section, desired_section, desired_key);
+    if (strcmp("Error:section-not-found", result) == 0) {
+      printf("Failed to find section [%s]", desired_section);
+      free_mem(first_section);
+      return 1;
+    } else if (strcmp("Error:key-not-found", result) == 0) {
+      printf("Failed to find key \"%s\" in section [%s]", desired_key, desired_section);
+      free_mem(first_section);
+      return 1;
+    } else
+      printf("%s", result);
+  }
+
+  // free memory
+  free_mem(first_section);
 
   return 0;
 }
