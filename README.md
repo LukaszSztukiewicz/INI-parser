@@ -45,8 +45,8 @@ Created by Łukasz Sztukiewicz & Michał Wiliński.
      ./my-program my_config.ini expression "log.files * log.size"
 
 > 2560
->
-> 4. Displaying username with organization postfix
+
+4. Displaying username with organization postfix
 
 > [user]
 > name = John
