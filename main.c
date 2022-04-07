@@ -128,16 +128,14 @@ struct Section *parse_file(FILE *file) {
 
 char *read_value_from_section(struct Section *first_section, char *section, char *key) {
 
-  struct Section *i_section = malloc(sizeof(struct Section));
-  i_section                 = first_section;
+  struct Section *i_section = first_section;
   while (strcmp(i_section->name, section) != 0) {
     if (i_section->nextsection == NULL)
       return "Error:section-not-found";
     i_section = i_section->nextsection;
   }
 
-  struct Key *i_key = malloc(sizeof(struct Key));
-  i_key             = i_section->keys;
+  struct Key *i_key = i_section->keys;
   while (strcmp(i_key->key, key) != 0) {
     if (i_key->nextkey == NULL)
       return "Error:key-not-found";
