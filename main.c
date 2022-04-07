@@ -153,7 +153,6 @@ char *read_value_from_section(struct Section *first_section, char *section, char
 }
 
 char *parse_expression(struct Section *parsed_sections, char *expression) {
-  char *message                 = malloc(sizeof(char) * 100);
   char *first_argument_section  = strtok(expression, " .");
   char *first_argument_key      = strtok(NULL, " .");
   char *first_value             = read_value_from_section(parsed_sections, first_argument_section, first_argument_key);
@@ -163,34 +162,34 @@ char *parse_expression(struct Section *parsed_sections, char *expression) {
   char *second_value            = read_value_from_section(parsed_sections, second_argument_section, second_argument_key);
   bool is_int_first_value       = is_integer_value(first_value);
   bool is_int_second_value      = is_integer_value(second_value);
+  char *message                 = malloc(sizeof(char) * (strlen(first_value) + strlen(second_value)));
   if (is_int_first_value && is_int_second_value) {
-    int first_int_value  = atoi(first_value);
-    int second_int_value = atoi(second_value);
+    long first_int_value  = atol(first_value);
+    long second_int_value = atol(second_value);
     switch (*operand) {
     case '+':
-      printf("%d", first_int_value + second_int_value);
+      printf("%ld", first_int_value + second_int_value);
       break;
     case '-':
-      printf("%d", first_int_value - second_int_value);
+      printf("%ld", first_int_value - second_int_value);
       break;
     case '*':
-      printf("%d", first_int_value * second_int_value);
+      printf("%ld", first_int_value * second_int_value);
       break;
     case '/':
-      printf("%d", first_int_value / second_int_value);
-      break;
-    case '%':
-      printf("%d", first_int_value % second_int_value);
+      printf("%ld", first_int_value / second_int_value);
       break;
     }
     strcpy(message, "");
   } else if ((is_int_first_value && !is_int_second_value) || (!is_int_first_value && is_int_second_value)) {
     strcpy(message, "Error:invalid-operation type mismatch");
   } else {
-    if (*operand != '+')
+    if (*operand != '+') {
       strcpy(message, "Error:invalid-operation on string");
-    else
-      message = strcat(first_value, second_value);
+    } else {
+      strcpy(message, first_value);
+      strcat(message, second_value);
+    }
   }
   return message;
 }
@@ -224,14 +223,17 @@ int main(int argc, char *argv[]) {
     char *result          = read_value_from_section(first_section, desired_section, desired_key);
     if (strcmp("Error:section-not-found", result) == 0) {
       printf("Failed to find section [%s]", desired_section);
+      free(result);
       free_mem(first_section);
       return 1;
     } else if (strcmp("Error:key-not-found", result) == 0) {
       printf("Failed to find key \"%s\" in section [%s]", desired_key, desired_section);
+      free(result);
       free_mem(first_section);
       return 1;
-    } else
+    } else {
       printf("%s", result);
+    }
   }
 
   // free memory
