@@ -234,6 +234,7 @@ int main(int argc, char *argv[]) {
     }
     char *result = parse_expression(first_section, argv[3]);
     printf("%s", result);
+    free(result);
   }
 
   // Mode2
