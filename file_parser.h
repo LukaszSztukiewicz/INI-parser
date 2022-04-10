@@ -7,6 +7,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#define BUFFER_SIZE 256
+
 struct Key {
   char *key;
   char *value;

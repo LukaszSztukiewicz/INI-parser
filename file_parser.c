@@ -32,8 +32,22 @@ void free_mem(struct Section *first_section) {
 // define parse function returning pointer to first struct section
 struct Section *parse_file(FILE *file) {
   struct Section *first_section = NULL;
-  char buffer[1024];
-  while (fgets(buffer, 1024, file) != NULL) {
+  char *buffer = (char *)malloc(sizeof(char) * BUFFER_SIZE);
+  while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+    int current_buffer_size = BUFFER_SIZE;
+    // handle comments
+    if (buffer[0] == ';') {
+      continue;
+    }
+    // handle lines exceeding buffer size (resize buffer)
+    while (buffer[strlen(buffer) - 1] != '\n') {
+      buffer = (char *)realloc(buffer, sizeof(char) * (current_buffer_size*2));
+      char *tmp = (char *)malloc(sizeof(char) * (current_buffer_size));
+      fgets(tmp, current_buffer_size, file);
+      strcat(buffer, tmp);
+      current_buffer_size *= 2;
+      free(tmp);
+    }     
     if (buffer[0] == '[') {
       // create a new section
       char *section_name = strtok(buffer, "]") + 1;
@@ -92,7 +106,7 @@ struct Section *parse_file(FILE *file) {
       }
     }
   }
-
+  free(buffer);
   return first_section;
 }
 
